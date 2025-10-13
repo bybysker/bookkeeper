@@ -6,7 +6,7 @@ from strands import Agent, tool
 from agents import query_gitlab_agent, query_github_agent, query_s3_agent
 from agents.config import bedrock_model
 from strands.tools.executors import ConcurrentToolExecutor
-
+from agents.prompts import ORCHESTRATOR_SYSTEM_PROMPT
 
 app = FastAPI(title="Strands Agent Server", version="1.0.0")
 
@@ -62,21 +62,10 @@ def documentation_assistant(query: str) -> str:
     except Exception as e:
         return f"Error in documentation assistant: {str(e)}"
 
-# Orchestrator system prompt
-ORCHESTRATOR_PROMPT = """
-You are an assistant that routes queries to specialized agents:
-- For GitLab tasks (repos, issues, merge requests) → Use gitlab_assistant
-- For GitHub tasks (repos, issues, pull requests) → Use github_assistant  
-- For technical documentation and support questions → Use documentation_assistant
-- For simple questions not requiring specialized knowledge → Answer directly
-
-Always select the most appropriate tool based on the user's query.
-"""
-
 # Create orchestrator agent
 orchestrator = Agent(
     model=bedrock_model,
-    system_prompt=ORCHESTRATOR_PROMPT,
+    system_prompt=ORCHESTRATOR_SYSTEM_PROMPT,
     tool_executor=ConcurrentToolExecutor(), 
     tools=[gitlab_assistant, github_assistant, documentation_assistant],
     trace_attributes={

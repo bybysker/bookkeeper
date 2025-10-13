@@ -4,7 +4,7 @@ from strands_tools import retrieve
 from datetime import datetime, timezone
 import os
 import dotenv
-from .config import bedrock_model
+from .config import litellm_bedrock_model
 from .prompts import S3_AGENT_SYSTEM_PROMPT
 
 dotenv.load_dotenv()
@@ -47,7 +47,7 @@ def get_s3_files(issue_description: str) -> str:
 def query_s3_agent(user_message):
 	try:
 		s3_agent = Agent(
-			model=bedrock_model,
+			model=litellm_bedrock_model,
 			system_prompt=S3_AGENT_SYSTEM_PROMPT,
 			tools=[get_s3_files],
 			trace_attributes={

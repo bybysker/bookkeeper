@@ -22,8 +22,8 @@ strands_telemetry = StrandsTelemetry().setup_otlp_exporter()
 # Models
 litellm_bedrock_model = LiteLLMModel(
     client_args={
-        "api_key": "sk-gyPffJl3XA5Ci9z9zCk0A",
-        "api_base": "https://d2if7psjphwjb4.cloudfront.net/",
+        "api_key": "sk-IBxM7eyXftfGqZyuMREEaw",
+        "api_base": "https://d3mgibprdimq9c.cloudfront.net/",
         "use_litellm_proxy": True
     },
     model_id="eu.anthropic.claude-3-5-sonnet-20240620-v1:0"

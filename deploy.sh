@@ -14,10 +14,6 @@ IMAGE_URI="${ECR_URI}/${REPOSITORY_NAME}:latest"
 
 echo "🚀 Starting deployment to ECR..."
 
-# Step 1: Create ECR repository (will skip if already exists)
-echo "📦 Creating ECR repository..."
-aws ecr create-repository --repository-name ${REPOSITORY_NAME} --region ${REGION} 2>/dev/null || echo "Repository already exists"
-
 # Step 2: Login to ECR
 echo "🔐 Logging into ECR..."
 aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ECR_URI}

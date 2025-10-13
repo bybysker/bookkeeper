@@ -3,7 +3,7 @@ import json
 
 agent_core_client = boto3.client('bedrock-agentcore', region_name='us-east-1')
 payload = json.dumps({
-    "input": {"prompt": "errors fixed. what AI project did devoteam built from s3 docs ?"}
+    "input": {"prompt": "what AI project did devoteam built from s3 docs ?"}
 })
 
 response = agent_core_client.invoke_agent_runtime(
