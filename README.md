@@ -29,6 +29,7 @@ The system uses an orchestrator pattern with three specialized agents:
 - Python 3.11+
 - Docker (for GitLab MCP client)
 - AWS credentials configured
+- Terraform (for infrastructure deployment)
 - Required environment variables (see Configuration)
 
 ### Installation
@@ -37,16 +38,29 @@ The system uses an orchestrator pattern with three specialized agents:
 # Install dependencies
 uv sync
 
-# Run the service
+# Run the service locally
 uv run uvicorn main_agent:app --host 0.0.0.0 --port 8080
 ```
 
 ### Docker Deployment
 
+Using Makefile (recommended):
 ```bash
 # Build and run
+make build
+make run
+
+# View logs
+make logs
+
+# Rebuild (clean + build + run)
+make rebuild
+```
+
+Or manually:
+```bash
 docker build -t bookkeeper .
-docker run -p 8080:8080 --env-file .env bookkeeper
+docker run -d --name bookkeeper-container --env-file .env -p 8080:8080 bookkeeper
 ```
 
 ## Configuration
@@ -108,7 +122,11 @@ GET /ping
 
 ## Knowledge Base Setup
 
-The S3 agent requires an AWS Bedrock Knowledge Base. Use the provided utility:
+The S3 agent requires an AWS Bedrock Knowledge Base. 
+
+**Recommended:** Use Terraform for infrastructure setup (see Infrastructure Setup section).
+
+**Alternative:** Use the Python utility for manual management:
 
 ```bash
 # Create knowledge base
@@ -149,32 +167,78 @@ bookkeeper/
 │   ├── s3_agent.py      # S3 knowledge base search
 │   ├── prompts.py       # Agent system prompts
 │   └── config.py        # Model configuration
+├── terraform/           # Infrastructure as Code
+│   ├── main.tf          # Provider configuration
+│   ├── ecr.tf           # ECR repository
+│   ├── bedrock.tf       # Bedrock knowledge base
+│   ├── opensearch.tf    # OpenSearch Serverless
+│   ├── s3.tf            # S3 bucket for data
+│   ├── iam.tf           # IAM roles and policies
+│   └── variables.tf     # Input variables
 ├── utils/               # Utility modules
 │   ├── knowledge_base.py # KB management
 │   └── kb_config.yaml   # KB configuration
 ├── main_agent.py        # FastAPI orchestrator service
-├── Dockerfile          # Container configuration
-└── pyproject.toml      # Dependencies
+├── deploy.sh            # ECR deployment script
+├── Dockerfile           # Container configuration
+├── Makefile             # Build automation
+└── pyproject.toml       # Dependencies
 ```
 
 ### Key Dependencies
 
 - **FastAPI**: Web framework for API endpoints
-- **Strands Agents**: Agent framework with tool execution
+- **Strands Agents**: Agent framework with tool execution  
 - **LiteLLM**: Model integration layer
-- **MCP Clients**: Model Context Protocol for external tools
-- **Boto3**: AWS service integration
+- **Langfuse**: Observability and tracing
+- **Pydantic**: Data validation and settings management
+
+## Infrastructure Setup
+
+### Terraform Deployment
+
+The project includes Terraform configuration for AWS infrastructure:
+
+```bash
+cd terraform
+
+# Initialize Terraform
+terraform init
+
+# Copy and customize variables
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your values
+
+# Deploy infrastructure
+terraform plan
+terraform apply
+```
+
+**Resources created:**
+- ECR repository for Docker images
+- OpenSearch Serverless collection for vector storage
+- S3 bucket for knowledge base data
+- IAM roles and policies for Bedrock access
+- Bedrock Knowledge Base with Titan embeddings
+
+See [terraform/README.md](terraform/README.md) for detailed configuration options.
 
 ## Deployment
 
 ### AWS ECR Deployment
 
-Use the provided script to deploy to ECR:
+After infrastructure is provisioned, deploy the application:
 
 ```bash
-# Configure variables in deploy-mcp.sh
-./deploy-mcp.sh
+# Configure variables in deploy.sh
+ACCOUNT_ID="your-aws-account-id" ./deploy.sh
 ```
+
+The script will:
+1. Login to ECR
+2. Build Docker image for ARM64 architecture
+3. Push image to ECR
+4. Verify deployment
 
 ### Environment Variables
 
