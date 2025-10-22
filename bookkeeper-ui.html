@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookkeeper - AI Project Discovery & Documentation Search</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .chat-container {
+            height: 500px;
+            overflow-y: auto;
+        }
+        .message-bubble {
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .typing-indicator {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect } = React;
+
+        const BookkeeperUI = () => {
+            const [messages, setMessages] = useState([
+                {
+                    id: 1,
+                    type: 'agent',
+                    content: 'Hello! I\'m Bookkeeper, your AI-powered project discovery assistant. I can help you find similar projects across GitLab and GitHub, search technical documentation, and discover relevant code repositories. What would you like to explore today?',
+                    timestamp: new Date()
+                }
+            ]);
+            const [inputMessage, setInputMessage] = useState('');
+            const [isLoading, setIsLoading] = useState(false);
+            const [endpoint, setEndpoint] = useState('local'); // 'local' or 'cloud'
+            const messagesEndRef = useRef(null);
+
+            const scrollToBottom = () => {
+                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            };
+
+            useEffect(() => {
+                scrollToBottom();
+            }, [messages]);
+
+            const sendMessage = async () => {
+                if (!inputMessage.trim() || isLoading) return;
+
+                const currentMessage = inputMessage.trim();
+
+                const userMessage = {
+                    id: Date.now(),
+                    type: 'user',
+                    content: currentMessage,
+                    timestamp: new Date()
+                };
+
+                setMessages(prev => [...prev, userMessage]);
+                setInputMessage('');
+                setIsLoading(true);
+
+                try {
+                    let response;
+                    
+                    if (endpoint === 'local') {
+                        console.log('Sending to local:', currentMessage);
+                        response = await fetch('http://localhost:8080/invocations', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                input: {
+                                    prompt: currentMessage
+                                }
+                            })
+                        });
+                    } else {
+                        // Cloud endpoint - update this URL with your deployed endpoint
+                        response = await fetch('YOUR_CLOUD_ENDPOINT_URL/invocations', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                input: {
+                                    prompt: currentMessage
+                                }
+                            })
+                        });
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log('Response:', data);
+
+                    const agentMessage = {
+                        id: Date.now() + 1,
+                        type: 'agent',
+                        content: data.output?.message || 'Sorry, I couldn\'t process your request.',
+                        timestamp: new Date(),
+                        model: data.output?.model || 'strands-orchestrator'
+                    };
+
+                    setMessages(prev => [...prev, agentMessage]);
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    const errorMessage = {
+                        id: Date.now() + 1,
+                        type: 'agent',
+                        content: `Sorry, I'm having trouble connecting to the bookkeeper service: ${error.message}. Please ensure the service is running on ${endpoint === 'local' ? 'localhost:8080' : 'your cloud endpoint'}.`,
+                        timestamp: new Date(),
+                        error: true
+                    };
+                    setMessages(prev => [...prev, errorMessage]);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            const quickActions = [
+                { text: 'Find projects similar to a React dashboard with authentication', icon: 'fas fa-search' },
+                { text: 'Search for microservices architecture examples in GitLab', icon: 'fab fa-gitlab' },
+                { text: 'Find Python FastAPI projects on GitHub', icon: 'fab fa-github' },
+                { text: 'Search documentation about AWS Bedrock integration', icon: 'fas fa-book' }
+            ];
+
+            const handleQuickAction = (action) => {
+                setInputMessage(action.text);
+            };
+
+            const formatMessage = (content) => {
+                return content.split('\n').map((line, index) => (
+                    <span key={index}>
+                        {line}
+                        {index < content.split('\n').length - 1 && <br />}
+                    </span>
+                ));
+            };
+
+            return (
+                <div className="min-h-screen bg-gray-50">
+                    {/* Header */}
+                    <div className="gradient-bg text-white p-6 shadow-lg">
+                        <div className="max-w-4xl mx-auto">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-3">
+                                    <i className="fas fa-book-open text-3xl"></i>
+                                    <div>
+                                        <h1 className="text-2xl font-bold">Bookkeeper</h1>
+                                        <p className="text-blue-200">AI Project Discovery & Documentation Search</p>
+                                    </div>
+                                </div>
+                                
+                                {/* Endpoint Switcher */}
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-sm">Endpoint:</span>
+                                    <select 
+                                        value={endpoint} 
+                                        onChange={(e) => setEndpoint(e.target.value)}
+                                        className="bg-white bg-opacity-20 text-white rounded px-3 py-1 text-sm"
+                                    >
+                                        <option value="local">Local (localhost:8080)</option>
+                                        <option value="cloud">Cloud (AWS)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="max-w-4xl mx-auto p-6">
+                        {/* Quick Actions */}
+                        <div className="mb-6">
+                            <h3 className="text-lg font-semibold text-gray-700 mb-3">Quick Actions</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {quickActions.map((action, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => handleQuickAction(action)}
+                                        className="flex items-center space-x-3 p-3 bg-white rounded-lg shadow hover:shadow-md transition-shadow text-left"
+                                    >
+                                        <i className={`${action.icon} text-purple-500`}></i>
+                                        <span className="text-gray-700">{action.text}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Chat Container */}
+                        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                            <div className="chat-container p-4 space-y-4">
+                                {messages.map((message) => (
+                                    <div
+                                        key={message.id}
+                                        className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                                    >
+                                        <div
+                                            className={`message-bubble p-3 rounded-lg ${
+                                                message.type === 'user'
+                                                    ? 'bg-purple-500 text-white'
+                                                    : message.error
+                                                    ? 'bg-red-100 text-red-800 border border-red-200'
+                                                    : 'bg-gray-100 text-gray-800'
+                                            }`}
+                                        >
+                                            <div className="font-medium">
+                                                {formatMessage(message.content)}
+                                            </div>
+                                            <div className={`text-xs mt-2 ${
+                                                message.type === 'user' ? 'text-purple-200' : 'text-gray-500'
+                                            }`}>
+                                                {message.timestamp.toLocaleTimeString()}
+                                                {message.model && (
+                                                    <span className="ml-2">• {message.model}</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                
+                                {isLoading && (
+                                    <div className="flex justify-start">
+                                        <div className="message-bubble p-3 rounded-lg bg-gray-100 text-gray-800">
+                                            <div className="typing-indicator">
+                                                <i className="fas fa-book-open mr-2"></i>
+                                                Searching across platforms...
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                <div ref={messagesEndRef} />
+                            </div>
+
+                            {/* Input Area */}
+                            <div className="border-t p-4 bg-gray-50">
+                                <div className="flex space-x-2">
+                                    <input
+                                        type="text"
+                                        value={inputMessage}
+                                        onChange={(e) => setInputMessage(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                                        placeholder="Ask about projects, repositories, or documentation..."
+                                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                                        disabled={isLoading}
+                                    />
+                                    <button
+                                        onClick={sendMessage}
+                                        disabled={isLoading || !inputMessage.trim()}
+                                        className="px-6 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        {isLoading ? (
+                                            <i className="fas fa-spinner fa-spin"></i>
+                                        ) : (
+                                            <i className="fas fa-paper-plane"></i>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Status Footer */}
+                        <div className="mt-6 text-center text-sm text-gray-500">
+                            <p>
+                                <i className="fas fa-shield-alt mr-1"></i>
+                                Powered by AWS Bedrock AgentCore • Claude Sonnet 4
+                                {endpoint === 'local' && ' (Local Development Mode)'}
+                            </p>
+                            <p className="mt-2 flex justify-center items-center space-x-4">
+                                <span><i className="fab fa-gitlab mr-1"></i>GitLab</span>
+                                <span><i className="fab fa-github mr-1"></i>GitHub</span>
+                                <span><i className="fas fa-database mr-1"></i>S3 Knowledge Base</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<BookkeeperUI />, document.getElementById('root'));
+    </script>
+</body>
+</html>
+
