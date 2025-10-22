@@ -3,20 +3,15 @@ FROM --platform=linux/arm64 ghcr.io/astral-sh/uv:python3.11-bookworm
 
 WORKDIR /app
 
-# Copy uv files
+# Copy uv files and source code (needed for editable install)
 COPY pyproject.toml uv.lock ./
+COPY src ./src
 
 # Install dependencies (including strands-agents)
 RUN uv sync --frozen --no-cache
-
-# Copy agent file
-COPY main_agent.py ./
-
-# Copy agents folder
-COPY agents ./agents
 
 # Expose port
 EXPOSE 8080
 
 # Run application
-CMD ["uv", "run", "uvicorn", "main_agent:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uv", "run", "uvicorn", "bookkeeper.api.app:app", "--host", "0.0.0.0", "--port", "8080"]

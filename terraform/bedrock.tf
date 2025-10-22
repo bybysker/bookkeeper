@@ -1,5 +1,5 @@
 # Bedrock Knowledge Base
-resource "aws_bedrockagent_knowledge_base" "main" {
+resource "aws_bedrockagent_knowledge_base" "bookkeeper_kb" {
   name        = var.knowledge_base_name
   description = var.knowledge_base_description
   role_arn    = aws_iam_role.bedrock_knowledge_base_role.arn
@@ -37,7 +37,7 @@ resource "aws_bedrockagent_knowledge_base" "main" {
 
 # S3 Data Source for Knowledge Base
 resource "aws_bedrockagent_data_source" "s3_source" {
-  knowledge_base_id = aws_bedrockagent_knowledge_base.main.id
+  knowledge_base_id = aws_bedrockagent_knowledge_base.bookkeeper_kb.id
   name              = "${var.knowledge_base_name}-s3-source"
   description       = "S3 data source for ${var.knowledge_base_name} knowledge base"
 

@@ -8,6 +8,8 @@ Bookkeeper is a FastAPI-based service that routes queries to specialized agents 
 
 ## Architecture
 
+![Orchestrator Architecture](docs/Bookkeeper-Page-2.drawio.svg)
+
 The system uses an orchestrator pattern with three specialized agents:
 
 - **GitLab Agent**: Analyzes GitLab repositories for similar projects
@@ -39,7 +41,7 @@ The system uses an orchestrator pattern with three specialized agents:
 uv sync
 
 # Run the service locally
-uv run uvicorn main_agent:app --host 0.0.0.0 --port 8080
+uv run uvicorn bookkeeper.api.app:app --host 0.0.0.0 --port 8080
 ```
 
 ### Docker Deployment
@@ -122,6 +124,8 @@ GET /ping
 
 ## Knowledge Base Setup
 
+![Knowledge Base Architecture](docs/Bookkeeper-Knowledge%20base.drawio.svg)
+
 The S3 agent requires an AWS Bedrock Knowledge Base. 
 
 **Recommended:** Use Terraform for infrastructure setup (see Infrastructure Setup section).
@@ -130,13 +134,13 @@ The S3 agent requires an AWS Bedrock Knowledge Base.
 
 ```bash
 # Create knowledge base
-python utils/knowledge_base.py --mode create
+uv run python -m bookkeeper.knowledge_base.manager --mode create
 
 # Delete knowledge base  
-python utils/knowledge_base.py --mode delete
+uv run python -m bookkeeper.knowledge_base.manager --mode delete
 ```
 
-Configure knowledge base settings in `utils/kb_config.yaml`.
+Configure knowledge base settings in `src/bookkeeper/knowledge_base/config.yaml`.
 
 ## Agent Details
 
@@ -161,28 +165,46 @@ Configure knowledge base settings in `utils/kb_config.yaml`.
 
 ```
 bookkeeper/
-├── agents/              # Specialized agent implementations
-│   ├── gitlab_agent.py  # GitLab integration
-│   ├── github_agent.py  # GitHub integration
-│   ├── s3_agent.py      # S3 knowledge base search
-│   ├── prompts.py       # Agent system prompts
-│   └── config.py        # Model configuration
-├── terraform/           # Infrastructure as Code
-│   ├── main.tf          # Provider configuration
-│   ├── ecr.tf           # ECR repository
-│   ├── bedrock.tf       # Bedrock knowledge base
-│   ├── opensearch.tf    # OpenSearch Serverless
-│   ├── s3.tf            # S3 bucket for data
-│   ├── iam.tf           # IAM roles and policies
-│   └── variables.tf     # Input variables
-├── utils/               # Utility modules
-│   ├── knowledge_base.py # KB management
-│   └── kb_config.yaml   # KB configuration
-├── main_agent.py        # FastAPI orchestrator service
-├── deploy.sh            # ECR deployment script
-├── Dockerfile           # Container configuration
-├── Makefile             # Build automation
-└── pyproject.toml       # Dependencies
+├── src/
+│   └── bookkeeper/          # Main application package
+│       ├── api/             # FastAPI application
+│       │   ├── app.py       # FastAPI app instance
+│       │   ├── routes.py    # API endpoints
+│       │   └── models.py    # Request/response models
+│       ├── agents/          # Specialized agents
+│       │   ├── orchestrator.py  # Main orchestrator
+│       │   ├── gitlab.py    # GitLab integration
+│       │   ├── github.py    # GitHub integration
+│       │   ├── s3.py        # S3 knowledge base
+│       │   └── prompts.py   # System prompts
+│       ├── core/            # Core configuration
+│       │   └── config.py    # Model & telemetry config
+│       └── knowledge_base/  # KB management
+│           ├── manager.py   # KB operations
+│           └── config.yaml  # KB configuration
+├── tests/               # Test suite
+│   ├── unit/           # Unit tests
+│   └── integration/    # Integration tests
+├── scripts/            # Utility scripts
+│   ├── invoke_agent.py
+│   └── deploy_agent.py
+├── terraform/          # Infrastructure as Code
+│   ├── main.tf         # Provider configuration
+│   ├── ecr.tf          # ECR repository
+│   ├── bedrock.tf      # Bedrock knowledge base
+│   ├── opensearch.tf   # OpenSearch Serverless
+│   ├── s3.tf           # S3 bucket for data
+│   ├── iam.tf          # IAM roles and policies
+│   └── variables.tf    # Input variables
+├── docs/               # Documentation & diagrams
+│   ├── PROJECT_STORY.md        # Project background
+│   ├── MIGRATION.md            # Migration guide
+│   └── REORGANIZATION_SUMMARY.md
+├── deploy.sh           # ECR deployment script
+├── Dockerfile          # Container configuration
+├── Makefile            # Build automation
+├── .env.example        # Environment variables template
+└── pyproject.toml      # Dependencies & packaging
 ```
 
 ### Key Dependencies

@@ -40,3 +40,16 @@ variable "s3_bucket_name" {
   type        = string
   default     = "kb-data-source"
 }
+
+# Agent Runtime Configuration Variables
+variable "gitlab_api_url" {
+  description = "GitLab API URL"
+  type        = string
+  default     = "https://gitlab.revolve.team/api/v4"
+}
+
+variable "langfuse_host" {
+  description = "Langfuse host URL"
+  type        = string
+  default     = "https://cloud.langfuse.com"
+}

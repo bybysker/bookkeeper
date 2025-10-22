@@ -10,3 +10,11 @@ knowledge_base_name        = "customer-support"
 knowledge_base_description = "Knowledge base for customer support using S3 agent"
 opensearch_collection_name = "bedrock-kb-collection"
 s3_bucket_name            = "bedrock-kb-data-source"
+
+# Agent Runtime Configuration
+gitlab_api_url = "https://gitlab.revolve.team/api/v4"
+langfuse_host  = "https://cloud.langfuse.com"
+
+# Note: Sensitive values (tokens, keys) are managed via AWS Secrets Manager
+# After deployment, update the secrets using:
+#   aws secretsmanager update-secret --secret-id <secret-name> --secret-string "value"

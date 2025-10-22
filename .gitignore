@@ -1,8 +1,48 @@
-.venv/
-.env
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# UV
 uv.lock
-*.pyc
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+.hypothesis/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cursor/
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
 
 # Terraform
 terraform/.terraform/
@@ -10,4 +50,22 @@ terraform/.terraform.lock.hcl
 terraform/*.tfstate
 terraform/*.tfstate.backup
 terraform/.terraform.tfstate.lock.info
+terraform/terraform.tfvars
 
+# Build artifacts
+*.whl
+.mypy_cache/
+.ruff_cache/
+.pytype/
+
+# Documentation builds
+docs/_build/
+site/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# Temporary files
+*.tmp
+*.bak
+*.swp

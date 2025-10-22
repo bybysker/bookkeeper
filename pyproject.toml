@@ -1,10 +1,13 @@
 [project]
 name = "bookkeeper"
 version = "0.1.0"
-description = "Add your description here"
+description = "Intelligent orchestrator system for finding similar projects and documentation across multiple platforms"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "bedrock-agentcore>=1.0.3",
+    "bedrock-agentcore-starter-toolkit>=0.1.21",
+    "boto3>=1.40.55",
     "dotenv>=0.9.9",
     "fastapi>=0.116.2",
     "httpx>=0.28.1",
@@ -16,3 +19,14 @@ dependencies = [
     "strands-agents-tools>=0.2.8",
     "uvicorn>=0.35.0",
 ]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false
